@@ -4,6 +4,7 @@ using BillCraft.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260730192634_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,6 +69,19 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
                     b.HasKey("PlanId");
 
                     b.ToTable("SubscriptionPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            PlanId = 1,
+                            CreatedAt = new DateTime(2026, 7, 30, 19, 26, 29, 835, DateTimeKind.Utc).AddTicks(4377),
+                            DurationInDays = 30,
+                            IsActive = true,
+                            MaxInvoicesPerMonth = 100,
+                            MaxUsersAllowed = 5,
+                            Name = "Free Trial",
+                            Price = 0m
+                        });
                 });
 
             modelBuilder.Entity("BillCraft.Web.Models.Tenant", b =>
@@ -75,8 +91,7 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -86,13 +101,14 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Subdomain")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SubscriptionPlanPlanId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -102,31 +118,38 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.HasKey("TenantId");
 
-                    b.HasIndex("PlanId");
+                    b.HasIndex("SubscriptionPlanPlanId");
 
                     b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("BillCraft.Web.Models.TenantSetting", b =>
                 {
-                    b.Property<string>("TenantId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CompanyAddress")
                         .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LogoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("TenantId");
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
 
                     b.ToTable("TenantSettings");
                 });
@@ -144,13 +167,11 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -161,12 +182,11 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TenantId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -176,8 +196,6 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("TenantId");
-
                     b.ToTable("Users");
                 });
 
@@ -185,7 +203,7 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
                 {
                     b.HasOne("BillCraft.Web.Models.SubscriptionPlan", "SubscriptionPlan")
                         .WithMany("Tenants")
-                        .HasForeignKey("PlanId")
+                        .HasForeignKey("SubscriptionPlanPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -194,24 +212,11 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
             modelBuilder.Entity("BillCraft.Web.Models.TenantSetting", b =>
                 {
-                    b.HasOne("BillCraft.Web.Models.Tenant", "Tenant")
+                    b.HasOne("BillCraft.Web.Models.Tenant", null)
                         .WithOne("TenantSetting")
                         .HasForeignKey("BillCraft.Web.Models.TenantSetting", "TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("BillCraft.Web.Models.User", b =>
-                {
-                    b.HasOne("BillCraft.Web.Models.Tenant", "Tenant")
-                        .WithMany("Users")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("BillCraft.Web.Models.SubscriptionPlan", b =>
@@ -221,9 +226,8 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
             modelBuilder.Entity("BillCraft.Web.Models.Tenant", b =>
                 {
-                    b.Navigation("TenantSetting");
-
-                    b.Navigation("Users");
+                    b.Navigation("TenantSetting")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -8,7 +8,7 @@ namespace BillCraft.Web.Data
     {
         private readonly ITenantProvider _tenantProvider;
 
-        // Dynamic Field: EF Core প্রতিবার কোয়েরি চলার সময় এই ফিল্ড থেকেই মান রিড করবে
+        // Dynamic Property: EF Core ইন্টারনালি ফিল্টার রিড করার জন্য এটি ব্যবহার করবে
         public string CurrentTenantId => _tenantProvider.GetTenantId();
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantProvider tenantProvider)
@@ -26,7 +26,25 @@ namespace BillCraft.Web.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Automatic Global Query Filter for Multi-Tenancy
+            // 1. One-to-One Relationship: Tenant <-> TenantSetting
+            modelBuilder.Entity<Tenant>()
+                .HasOne(t => t.TenantSetting)
+                .WithOne(ts => ts.Tenant)
+                .HasForeignKey<TenantSetting>(ts => ts.TenantId);
+
+            // 2. One-to-Many Relationship: Tenant <-> User
+            modelBuilder.Entity<Tenant>()
+                .HasMany(t => t.Users)
+                .WithOne(u => u.Tenant)
+                .HasForeignKey(u => u.TenantId);
+
+            // 3. Foreign Key Mapping: Tenant <-> SubscriptionPlan
+            modelBuilder.Entity<Tenant>()
+                .HasOne(t => t.SubscriptionPlan)
+                .WithMany(p => p.Tenants)
+                .HasForeignKey(t => t.PlanId);
+
+            // 4. Automatic Global Query Filter for Multi-Tenancy
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
@@ -39,31 +57,37 @@ namespace BillCraft.Web.Data
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
+            var currentTenant = CurrentTenantId;
+
             // Automatic TenantId Assignment on Save
             foreach (var entry in ChangeTracker.Entries<IMustHaveTenant>())
             {
-                if (entry.State == EntityState.Added && string.IsNullOrEmpty(entry.Entity.TenantId))
+                if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.TenantId = CurrentTenantId;
+                    // রেজিস্ট্রেশনের সময় যদি Controller থেকে ইতোমধ্যে TenantId বসানো হয়ে থাকে, 
+                    // তবে সেটি ওভাররাইট করবে না। শুধুমাত্র খালি থাকলে CurrentTenantId বসাবে।
+                    if (string.IsNullOrEmpty(entry.Entity.TenantId) && !string.IsNullOrEmpty(currentTenant))
+                    {
+                        entry.Entity.TenantId = currentTenant;
+                    }
                 }
             }
 
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        // 💡 Expression-এ DbContext-এর CurrentTenantId Property রেফারেন্স তৈরি করা হয়েছে
+        // Dynamic MemberAccess Expression (মেমোরি ক্যাশিং প্রবলেম ফিক্স করা হয়েছে)
         private LambdaExpression GetTenantFilterExpression(Type type)
         {
             var parameter = Expression.Parameter(type, "e");
-
-            // CurrentTenantId প্রপার্টি রিড করার জন্য DbContext Instance binding
             var tenantProperty = Expression.Property(parameter, nameof(IMustHaveTenant.TenantId));
-            var currentTenantProperty = Expression.Property(
-                Expression.Constant(this),
+
+            var dbContextProperty = Expression.Property(
+                Expression.Convert(Expression.Constant(this), typeof(ApplicationDbContext)),
                 nameof(CurrentTenantId)
             );
 
-            var equal = Expression.Equal(tenantProperty, currentTenantProperty);
+            var equal = Expression.Equal(tenantProperty, dbContextProperty);
             return Expression.Lambda(equal, parameter);
         }
     }

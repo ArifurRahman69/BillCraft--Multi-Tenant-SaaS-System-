@@ -3,7 +3,6 @@ using BillCraft.Web.Models;
 using BillCraft.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -27,6 +26,7 @@ namespace BillCraft.Web.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            // 1. Check Duplicate Subdomain
             bool exists = await _context.Tenants.AnyAsync(t => t.Subdomain == model.Subdomain.ToLower());
             if (exists)
             {
@@ -34,49 +34,63 @@ namespace BillCraft.Web.Controllers
                 return View(model);
             }
 
-            var defaultPlan = await _context.SubscriptionPlans.FirstOrDefaultAsync();
+            // 2. Safe Fetch or Auto-Creation of Default Subscription Plan
+            var defaultPlan = await _context.SubscriptionPlans.IgnoreQueryFilters().FirstOrDefaultAsync();
             if (defaultPlan == null)
             {
-                defaultPlan = new SubscriptionPlan { Name = "Basic Plan", Price = 0 };
+                defaultPlan = new SubscriptionPlan
+                {
+                    Name = "Basic Plan",
+                    Price = 0
+                };
                 _context.SubscriptionPlans.Add(defaultPlan);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Auto-generates PlanId via Identity
             }
 
-            var tenantId = Guid.NewGuid().ToString();
-
+            // 3. Create Root Tenant Entity
             var tenant = new Tenant
             {
-                TenantId = tenantId,
+                TenantId = Guid.NewGuid().ToString(),
                 CompanyName = model.CompanyName,
                 Subdomain = model.Subdomain.ToLower(),
-                PlanId = defaultPlan.PlanId,
+                PlanId = defaultPlan.PlanId, // Exact Foreign Key Mapping
                 Status = "Active"
             };
 
-            var setting = new TenantSetting
+            // 4. Attach Navigation Properties (EF Core automatically manages Foreign Keys)
+            tenant.TenantSetting = new TenantSetting
             {
-                TenantId = tenantId,
                 Currency = "BDT",
                 CompanyAddress = "Default Address"
             };
 
-            var user = new User
+            tenant.Users.Add(new User
             {
-                TenantId = tenantId,
                 FullName = model.FullName,
                 Email = model.Email.ToLower(),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password),
                 Role = "TenantAdmin",
                 IsActive = true
-            };
+            });
 
-            _context.Tenants.Add(tenant);
-            _context.TenantSettings.Add(setting);
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            // 5. Atomic Database Transaction
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Tenants.Add(tenant); // EF Core maintains insert order automatically
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-            TempData["SuccessMessage"] = "রেজিস্ট্রেশন সফল হয়েছে! এখন লগইন করুন।";
-            return RedirectToAction(nameof(Login));
+                TempData["SuccessMessage"] = "রেজিস্ট্রেশন সফল হয়েছে! এখন লগইন করুন।";
+                return RedirectToAction(nameof(Login));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                ModelState.AddModelError(string.Empty, "রেজিস্ট্রেশন করতে সমস্যা হয়েছে: " + errorMsg);
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -88,11 +102,20 @@ namespace BillCraft.Web.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email.ToLower());
+            // IgnoreQueryFilters ব্যবহার করা হয়েছে যেন Tenant Query Filter লগইন ভ্যালিডেশন আটকায় না
+            var user = await _context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Email == model.Email.ToLower());
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
             {
                 ModelState.AddModelError(string.Empty, "ইমেইল অথবা পাসওয়ার্ড ভুল!");
+                return View(model);
+            }
+
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "আপনার অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে। কর্তৃপক্ষের সাথে যোগাযোগ করুন।");
                 return View(model);
             }
 
@@ -114,6 +137,7 @@ namespace BillCraft.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("BillCraftCookie");
