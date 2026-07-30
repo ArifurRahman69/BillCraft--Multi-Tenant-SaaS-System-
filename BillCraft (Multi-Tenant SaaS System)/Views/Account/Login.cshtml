@@ -1,0 +1,58 @@
+﻿@model BillCraft.Web.Models.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">লগইন করুন</h3>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                {
+                    <div class="alert alert-danger">
+                        @Html.ValidationSummary(true, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Login" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">ইমেইল ঠিকানা</label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="example@mail.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">পাসওয়ার্ড</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">মনে রাখুন (Remember Me)</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">লগইন</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <span class="text-muted">নতুন ব্যবহারকারী? </span>
+                    <a asp-action="Register" class="text-decoration-none">রেজিস্ট্রেশন করুন</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

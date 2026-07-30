@@ -1,0 +1,69 @@
+﻿@model BillCraft.Web.Models.ViewModels.RegisterTenantViewModel
+
+@{
+    ViewData["Title"] = "Tenant Registration";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">রেজিস্ট্রেশন করুন</h3>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                {
+                    <div class="alert alert-danger">
+                        @Html.ValidationSummary(true, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Register" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="CompanyName" class="form-label">কোম্পানির নাম</label>
+                        <input asp-for="CompanyName" class="form-control" placeholder="যেমন: Acma Tech" />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Subdomain" class="form-label">Subdomain Key</label>
+                        <input asp-for="Subdomain" class="form-control" placeholder="যেমন: acmatech" />
+                        <span asp-validation-for="Subdomain" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">আপনার পূর্ণ নাম</label>
+                        <input asp-for="FullName" class="form-control" placeholder="আপনার নাম লিখুন" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">ইমেইল ঠিকানা</label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="example@mail.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">পাসওয়ার্ড</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label">কনফার্ম পাসওয়ার্ড</label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">রেজিস্টার করুন</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <span class="text-muted">অ্যাকাউন্ট আছে? </span>
+                    <a asp-action="Login" class="text-decoration-none">লগইন করুন</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
