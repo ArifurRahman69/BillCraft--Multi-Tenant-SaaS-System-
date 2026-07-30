@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using BillCraft.Web.Data;
+﻿using BillCraft.Web.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,9 +38,11 @@ builder.Services.AddAuthentication(AuthScheme)
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
 
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// 5. Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -57,11 +58,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 5. Enable Authentication & Authorization
+// 6. Enable Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 6. Default Route Configuration
+// 7. Default Route Configuration
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
