@@ -1,8 +1,45 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
     Layout = "/Views/Shared/_AdminLayout.cshtml";
 }
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<div class="container my-4">
+    <div class="p-4 mb-4 bg-light rounded-3 border shadow-sm">
+        <div class="container-fluid py-2">
+            <h1 class="display-6 fw-bold text-primary">স্বাগতম, @ViewBag.UserName!</h1>
+            <p class="col-md-8 fs-5 text-muted">BillCraft Multi-Tenant Platform-এ আপনাকে স্বাগতম। নিচে আপনার অ্যাকাউন্টের বিবরণ দেওয়া হলো:</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- User Info Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm bg-white">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary">User Info</h5>
+                    <hr />
+                    <p class="card-text mb-1"><strong>Name:</strong> @ViewBag.UserName</p>
+                    <p class="card-text mb-1"><strong>Email:</strong> @ViewBag.UserEmail</p>
+                    <p class="card-text"><strong>Role:</strong> <span class="badge bg-success">@ViewBag.UserRole</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tenant Info Card -->
+        <div class="col-md-8">
+            <div class="card h-100 border-0 shadow-sm bg-white">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary">Tenant Isolation Status</h5>
+                    <hr />
+                    <p class="card-text mb-2"><strong>Active Tenant ID:</strong></p>
+                    <div class="p-2 bg-light rounded font-monospace text-break border">
+                        @ViewBag.TenantId
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        💡 EF Core Global Query Filter অন থাকায় এই Tenant ID দিয়ে সিস্টেমের সব ডেটা স্বয়ংক্রিয়ভাবে ফিল্টার হচ্ছে।
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

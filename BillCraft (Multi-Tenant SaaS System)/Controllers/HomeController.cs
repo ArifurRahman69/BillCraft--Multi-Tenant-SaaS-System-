@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using BillCraft__Multi_Tenant_SaaS_System_.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
 {
+    [Authorize] // ?? ???? ??? ???? ??? ??? ???? ?? ??????????? ?????? ???? ????? ??
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -15,6 +18,12 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
 
         public IActionResult Index()
         {
+            // Claims ???? ???? ??? ??????? ???? ??? ??? ?????
+            ViewBag.UserName = User.FindFirstValue(ClaimTypes.Name);
+            ViewBag.UserEmail = User.FindFirstValue(ClaimTypes.Email);
+            ViewBag.UserRole = User.FindFirstValue(ClaimTypes.Role);
+            ViewBag.TenantId = User.FindFirstValue("TenantId");
+
             return View();
         }
 
