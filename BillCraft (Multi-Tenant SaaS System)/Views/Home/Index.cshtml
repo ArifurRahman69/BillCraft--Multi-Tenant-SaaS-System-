@@ -3,43 +3,155 @@
     Layout = "/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container my-4">
-    <div class="p-4 mb-4 bg-light rounded-3 border shadow-sm">
-        <div class="container-fluid py-2">
-            <h1 class="display-6 fw-bold text-primary">স্বাগতম, @ViewBag.UserName!</h1>
-            <p class="col-md-8 fs-5 text-muted">BillCraft Multi-Tenant Platform-এ আপনাকে স্বাগতম। নিচে আপনার অ্যাকাউন্টের বিবরণ দেওয়া হলো:</p>
-        </div>
+<!-- Top Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Dashboard</h4>
+        <p class="text-muted small mb-0">আপনার সিস্টেমের সাম্প্রতিক আপডেট ও ওভারভিউ।</p>
     </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-white bg-white border shadow-sm rounded-3 fw-semibold text-secondary btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Data
+        </button>
+        <button class="btn btn-primary rounded-3 fw-semibold btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i> New Invoice
+        </button>
+    </div>
+</div>
 
-    <div class="row g-4">
-        <!-- User Info Card -->
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm bg-white">
-                <div class="card-body">
-                    <h5 class="card-title text-secondary">User Info</h5>
-                    <hr />
-                    <p class="card-text mb-1"><strong>Name:</strong> @ViewBag.UserName</p>
-                    <p class="card-text mb-1"><strong>Email:</strong> @ViewBag.UserEmail</p>
-                    <p class="card-text"><strong>Role:</strong> <span class="badge bg-success">@ViewBag.UserRole</span></p>
+<!-- 4 Summary Status Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold">Monthly Sales</span>
+                    <h3 class="fw-bold mt-2 mb-0">৳ 23,850</h3>
+                    <small class="text-success fw-semibold"><i class="bi bi-arrow-up-short"></i> +12.5% from last month</small>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-4">
+                    <i class="bi bi-wallet2 fs-4"></i>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Tenant Info Card -->
-        <div class="col-md-8">
-            <div class="card h-100 border-0 shadow-sm bg-white">
-                <div class="card-body">
-                    <h5 class="card-title text-secondary">Tenant Isolation Status</h5>
-                    <hr />
-                    <p class="card-text mb-2"><strong>Active Tenant ID:</strong></p>
-                    <div class="p-2 bg-light rounded font-monospace text-break border">
-                        @ViewBag.TenantId
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        💡 EF Core Global Query Filter অন থাকায় এই Tenant ID দিয়ে সিস্টেমের সব ডেটা স্বয়ংক্রিয়ভাবে ফিল্টার হচ্ছে।
-                    </small>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold">Total Invoices</span>
+                    <h3 class="fw-bold mt-2 mb-0">23</h3>
+                    <small class="text-success fw-semibold"><i class="bi bi-arrow-up-short"></i> +18.5% from last month</small>
+                </div>
+                <div class="bg-warning-subtle text-warning p-3 rounded-4">
+                    <i class="bi bi-receipt-cutoff fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold">Active Clients</span>
+                    <h3 class="fw-bold mt-2 mb-0">44</h3>
+                    <small class="text-success fw-semibold"><i class="bi bi-arrow-up-short"></i> +10% from last month</small>
+                </div>
+                <div class="bg-info-subtle text-info p-3 rounded-4">
+                    <i class="bi bi-people fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold">Active Users</span>
+                    <h3 class="fw-bold mt-2 mb-0">10</h3>
+                    <small class="text-muted fw-semibold">Team Members</small>
+                </div>
+                <div class="bg-success-subtle text-success p-3 rounded-4">
+                    <i class="bi bi-person-check fs-4"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Quick Actions & Chart Section -->
+<div class="row g-3 mb-4">
+    <!-- Quick Action Purple Panel -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+            <h5 class="fw-bold mb-3">Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <button class="btn btn-light text-primary fw-bold text-start p-3 rounded-3 d-flex align-items-center gap-3">
+                    <i class="bi bi-plus-circle-fill fs-4"></i> Create New Invoice
+                </button>
+                <button class="btn btn-outline-light fw-semibold text-start p-3 rounded-3 d-flex align-items-center gap-3 border-0 bg-white bg-opacity-10">
+                    <i class="bi bi-file-earmark-text fs-4"></i> Invoice History
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Panel -->
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Revenue Analytics</h6>
+                <span class="badge bg-light text-dark border">Last 6 Months</span>
+            </div>
+            <div style="height: 200px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tenant Isolation Info Banner -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-primary text-white p-2 rounded-3">
+            <i class="bi bi-shield-lock-fill fs-4"></i>
+        </div>
+        <div>
+            <div class="fw-bold text-dark">Multi-Tenant Isolated Session</div>
+            <small class="text-muted font-monospace">Active Tenant ID: @ViewBag.TenantId</small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Chart.js Configuration
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Revenue (BDT)',
+                    data: [12000, 19000, 15000, 22000, 18000, 23850],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}
