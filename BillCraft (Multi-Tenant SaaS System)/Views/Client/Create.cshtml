@@ -1,0 +1,69 @@
+﻿@model BillCraft.Web.Models.Client
+
+@{
+    ViewData["Title"] = "Add New Client";
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-1">Add New Client</h4>
+                <p class="text-muted small mb-0">ক্লায়েন্টের বিবরণ পূরণ করুন।</p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-3">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label fw-semibold text-secondary small">Client Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control rounded-3" placeholder="যেমন: Rahim Ahmed" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="CompanyName" class="form-label fw-semibold text-secondary small">Company Name</label>
+                        <input asp-for="CompanyName" class="form-control rounded-3" placeholder="যেমন: Tech Solutions Ltd." />
+                    </div>
+
+                    <!-- Phone Number (Maxlength 11) -->
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label fw-semibold text-secondary small">Phone Number <span class="text-danger">*</span></label>
+                        <input asp-for="Phone" class="form-control rounded-3" placeholder="017xxxxxxxx" maxlength="11" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Email Address (gmail.com placeholder) -->
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-semibold text-secondary small">Email Address</label>
+                        <input asp-for="Email" type="email" class="form-control rounded-3" placeholder="client@gmail.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Address" class="form-label fw-semibold text-secondary small">Address</label>
+                        <textarea asp-for="Address" class="form-control rounded-3" rows="3" placeholder="ঠিকানা লিখুন..."></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-2 d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light border rounded-3 px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

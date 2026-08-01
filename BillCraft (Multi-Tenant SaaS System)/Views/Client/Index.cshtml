@@ -1,0 +1,88 @@
+﻿@model IEnumerable<BillCraft.Web.Models.Client>
+
+@{
+    ViewData["Title"] = "Clients";
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Alert Message Notification -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Client Management</h4>
+        <p class="text-muted small mb-0">আপনার টেন্যান্টের সকল ক্লায়েন্টের তালিকা ও নতুন ক্লায়েন্ট যুক্ত করুন।</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary rounded-3 fw-semibold btn-sm d-flex align-items-center gap-2">
+        <i class="bi bi-person-plus-fill"></i> Add New Client
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 bg-white">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3 text-secondary small fw-bold">CLIENT NAME</th>
+                        <th class="py-3 text-secondary small fw-bold">COMPANY</th>
+                        <th class="py-3 text-secondary small fw-bold">CONTACT INFO</th>
+                        <th class="py-3 text-secondary small fw-bold">ADDED DATE</th>
+                        <th class="pe-4 py-3 text-end text-secondary small fw-bold">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-people fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                                কোনো ক্লায়েন্ট পাওয়া যায়নি। নতুন ক্লায়েন্ট যোগ করতে উপরের বোতামে ক্লিক করুন।
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@item.Name</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border fw-normal">
+                                        @(string.IsNullOrEmpty(item.CompanyName) ? "N/A" : item.CompanyName)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-dark"><i class="bi bi-telephone text-muted me-1"></i>@item.Phone</div>
+                                    <div class="small text-muted"><i class="bi bi-envelope text-muted me-1"></i>@(item.Email ?? "No email")</div>
+                                </td>
+                                <td class="small text-muted">
+                                    @item.CreatedAt.ToString("MMM dd, yyyy")
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <a asp-action="Edit" asp-route-id="@item.ClientId" class="btn btn-sm btn-light border me-1 text-secondary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@item.ClientId" method="post" class="d-inline" onsubmit="return confirm('আপনি কি নিশ্চিত এই ক্লায়েন্টকে মুছে ফেলতে চান?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
