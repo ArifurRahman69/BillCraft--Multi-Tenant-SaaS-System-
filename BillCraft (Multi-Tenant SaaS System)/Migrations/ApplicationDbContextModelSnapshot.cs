@@ -52,7 +52,8 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)");
 
                     b.Property<string>("TenantId")
                         .IsRequired()
@@ -63,6 +64,47 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("BillCraft.Web.Models.Product", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("ProductId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("BillCraft.Web.Models.SubscriptionPlan", b =>
@@ -225,6 +267,17 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
                 });
 
             modelBuilder.Entity("BillCraft.Web.Models.Client", b =>
+                {
+                    b.HasOne("BillCraft.Web.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("BillCraft.Web.Models.Product", b =>
                 {
                     b.HasOne("BillCraft.Web.Models.Tenant", "Tenant")
                         .WithMany()

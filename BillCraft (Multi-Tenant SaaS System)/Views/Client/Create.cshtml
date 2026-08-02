@@ -33,14 +33,12 @@
                         <input asp-for="CompanyName" class="form-control rounded-3" placeholder="যেমন: Tech Solutions Ltd." />
                     </div>
 
-                    <!-- Phone Number (Maxlength 11) -->
                     <div class="col-md-6">
                         <label asp-for="Phone" class="form-label fw-semibold text-secondary small">Phone Number <span class="text-danger">*</span></label>
                         <input asp-for="Phone" class="form-control rounded-3" placeholder="017xxxxxxxx" maxlength="11" />
                         <span asp-validation-for="Phone" class="text-danger small"></span>
                     </div>
 
-                    <!-- Email Address (gmail.com placeholder) -->
                     <div class="col-md-6">
                         <label asp-for="Email" class="form-label fw-semibold text-secondary small">Email Address</label>
                         <input asp-for="Email" type="email" class="form-control rounded-3" placeholder="client@gmail.com" />

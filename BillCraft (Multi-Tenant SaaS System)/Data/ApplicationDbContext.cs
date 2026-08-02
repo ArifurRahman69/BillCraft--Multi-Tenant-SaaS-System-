@@ -22,6 +22,7 @@ namespace BillCraft.Web.Data
         public DbSet<TenantSetting> TenantSettings { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Client> Clients { get; set; } = null!;
+        public DbSet<Product> Products { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

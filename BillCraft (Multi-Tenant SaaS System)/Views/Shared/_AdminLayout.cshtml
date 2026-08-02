@@ -18,7 +18,6 @@
             color: #334155;
         }
 
-        /* Sidebar Styling */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -61,25 +60,24 @@
             margin: 0;
         }
 
-        .sidebar-menu li a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0.75rem 1rem;
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-            border-radius: 10px;
-            transition: all 0.2s ease;
-            margin-bottom: 4px;
-        }
+            .sidebar-menu li a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 0.75rem 1rem;
+                color: #64748b;
+                text-decoration: none;
+                font-weight: 500;
+                border-radius: 10px;
+                transition: all 0.2s ease;
+                margin-bottom: 4px;
+            }
 
-        .sidebar-menu li a:hover, .sidebar-menu li a.active {
-            background-color: #6366f1;
-            color: #ffffff;
-        }
+                .sidebar-menu li a:hover, .sidebar-menu li a.active {
+                    background-color: #6366f1;
+                    color: #ffffff;
+                }
 
-        /* Main Content & Topbar Styling */
         .main-wrapper {
             margin-left: 260px;
             min-height: 100vh;
@@ -105,21 +103,21 @@
             width: 320px;
         }
 
-        .search-box input {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.5rem 1rem 0.5rem 2.5rem;
-            font-size: 0.9rem;
-        }
+            .search-box input {
+                background-color: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.5rem 1rem 0.5rem 2.5rem;
+                font-size: 0.9rem;
+            }
 
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-        }
+            .search-box i {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #94a3b8;
+            }
 
         .content-body {
             padding: 2rem;
@@ -129,7 +127,6 @@
 </head>
 <body>
 
-    <!-- 1. Left Sidebar Navigation -->
     <aside class="sidebar">
         <div>
             <a href="#" class="sidebar-brand">
@@ -139,7 +136,7 @@
             <div class="nav-section-title">Main</div>
             <ul class="sidebar-menu">
                 <li>
-                    <a asp-controller="Home" asp-action="Index" class="active">
+                    <a asp-controller="Home" asp-action="Index">
                         <i class="bi bi-grid-1x2-fill"></i> Dashboard
                     </a>
                 </li>
@@ -154,7 +151,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a asp-controller="Product" asp-action="Index">
                         <i class="bi bi-box-seam"></i> Products/Services
                     </a>
                 </li>
@@ -175,7 +172,6 @@
             </ul>
         </div>
 
-        <!-- Sidebar Footer / Logout -->
         <div>
             <hr class="text-muted" />
             <form asp-controller="Account" asp-action="Logout" method="post">
@@ -187,9 +183,7 @@
         </div>
     </aside>
 
-    <!-- 2. Main Content Wrapper -->
     <div class="main-wrapper">
-        <!-- Top Navigation Bar -->
         <header class="top-navbar">
             <div class="search-box">
                 <i class="bi bi-search"></i>
@@ -203,7 +197,6 @@
 
                 <div class="vr h-100 my-auto"></div>
 
-                <!-- User Profile Info -->
                 <div class="d-flex align-items-center gap-2">
                     <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
                         @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
@@ -216,16 +209,13 @@
             </div>
         </header>
 
-        <!-- Main Body Content -->
         <main class="content-body">
             @RenderBody()
         </main>
     </div>
 
-    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js for Visual Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
