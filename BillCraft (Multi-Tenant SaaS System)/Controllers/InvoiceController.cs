@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BillCraft.Web.Data;
 using BillCraft.Web.Models;
+using BillCraft.Web.Services;
 
 namespace BillCraft.Web.Controllers
 {
     public class InvoiceController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ISubscriptionService _subscriptionService;
 
-        public InvoiceController(ApplicationDbContext context)
+        public InvoiceController(ApplicationDbContext context, ISubscriptionService subscriptionService)
         {
             _context = context;
+            _subscriptionService = subscriptionService;
         }
 
         // GET: Invoice List
@@ -49,6 +52,14 @@ namespace BillCraft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(InvoiceCreateViewModel model)
         {
+            // ১. সাবস্ক্রিপশন প্ল্যান লিমিট চেক
+            bool canCreate = await _subscriptionService.CanCreateInvoiceAsync();
+            if (!canCreate)
+            {
+                TempData["ErrorMessage"] = "চলতি মাসের জন্য আপনার ইনভয়েস তৈরির সীমা শেষ হয়ে গেছে! আনলিমিটেড ইনভয়েসের জন্য আপনার প্ল্যান আপগ্রেড করুন।";
+                return RedirectToAction("Index", "Subscription");
+            }
+
             if (model.Items == null || !model.Items.Any())
             {
                 ModelState.AddModelError("", "কমপক্ষে একটি প্রোডাক্ট বা সেবা যোগ করুন।");
@@ -162,7 +173,7 @@ namespace BillCraft.Web.Controllers
             _context.Invoices.Update(invoice);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "পেমেন্ট সফলভাবে জমা নেওয়া হয়েছে!";
+            TempData["SuccessMessage"] = "পেমেন্ট সফলভাবে জমা নেওয়া হয়েছে!";
             return RedirectToAction(nameof(Details), new { id = invoiceId });
         }
 

@@ -1,0 +1,92 @@
+﻿@model IEnumerable<BillCraft.Web.Models.Plan>
+@{
+    ViewData["Title"] = "Subscription Plans";
+    var currentSub = ViewBag.CurrentSubscription as BillCraft.Web.Models.TenantSubscription;
+}
+
+<div class="container-fluid py-3">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">আপনার সাবস্ক্রিপশন প্ল্যান নির্বাচন করুন</h2>
+        <p class="text-muted">আপনার ব্যবসার প্রয়োজন অনুযায়ী সেরা সার্ভিস প্যাকেজ বেছে নিন</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Current Subscription Banner (If active) -->
+    @if (currentSub != null && currentSub.Plan != null)
+    {
+        <div class="card bg-primary text-white mb-4 shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <span class="badge bg-warning text-dark mb-1">অ্যাক্টিভ প্ল্যান</span>
+                    <h4 class="mb-1">@currentSub.Plan.Name Plan</h4>
+                    <p class="mb-0 text-white-50">মেয়াদ শেষ হবে: <strong>@currentSub.EndDate.ToString("dd MMM yyyy")</strong></p>
+                </div>
+                <div class="mt-2 mt-md-0">
+                    <span class="fs-5 fw-bold">৳@currentSub.Plan.Price.ToString("N2") / মাস</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Pricing Cards -->
+    <div class="row g-4 justify-content-center">
+        @foreach (var plan in Model)
+        {
+            bool isCurrentPlan = currentSub != null && currentSub.PlanId == plan.PlanId;
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 @(isCurrentPlan ? "border border-2 border-primary" : "")">
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="text-center mb-3">
+                            <h4 class="fw-bold">@plan.Name</h4>
+                            <p class="text-muted small">@plan.Description</p>
+                            <div class="my-3">
+                                <span class="display-6 fw-bold text-dark">৳@plan.Price.ToString("N0")</span>
+                                <span class="text-muted">/@plan.DurationInDays দিন</span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <ul class="list-unstyled flex-grow-1 my-3">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <strong>@(plan.MaxClients == -1 ? "আনলিমিটেড" : plan.MaxClients.ToString())</strong> ক্লায়েন্ট
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <strong>@(plan.MaxInvoicesPerMonth == -1 ? "আনলিমিটেড" : plan.MaxInvoicesPerMonth.ToString())</strong> ইনভয়েস/মাস
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <strong>@(plan.MaxProducts == -1 ? "আনলিমিটেড" : plan.MaxProducts.ToString())</strong> প্রোডাক্টস/সার্ভিস
+                            </li>
+                        </ul>
+
+                        <div class="mt-auto text-center">
+                            @if (isCurrentPlan)
+                            {
+                                <button class="btn btn-outline-primary w-100 disabled" disabled>বর্তমান প্ল্যান</button>
+                            }
+                            else
+                            {
+                                <form asp-action="Subscribe" method="post">
+                                    <input type="hidden" name="planId" value="@plan.PlanId" />
+                                    <button type="submit" class="btn btn-primary w-100">প্ল্যান বেছে নিন</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,5 +1,6 @@
 ﻿using BillCraft.Web.Data;
 using BillCraft.Web.Models;
+using BillCraft.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +11,12 @@ namespace BillCraft.Web.Controllers
     public class ClientController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ISubscriptionService _subscriptionService;
 
-        public ClientController(ApplicationDbContext context)
+        public ClientController(ApplicationDbContext context, ISubscriptionService subscriptionService)
         {
             _context = context;
+            _subscriptionService = subscriptionService;
         }
 
         // GET: Client/Index
@@ -40,6 +43,14 @@ namespace BillCraft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Client client)
         {
+            // ১. সাবস্ক্রিপশন প্ল্যান লিমিট চেক
+            bool canCreate = await _subscriptionService.CanCreateClientAsync();
+            if (!canCreate)
+            {
+                TempData["ErrorMessage"] = "আপনার বর্তমান সাবস্ক্রিপশন প্ল্যানের ক্লায়েন্ট সীমা পূর্ণ হয়ে গেছে! নতুন ক্লায়েন্ট যোগ করতে প্ল্যান আপগ্রেড করুন।";
+                return RedirectToAction("Index", "Subscription");
+            }
+
             var tenantId = User.FindFirst("TenantId")?.Value;
             if (!string.IsNullOrEmpty(tenantId))
             {

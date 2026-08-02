@@ -4,6 +4,7 @@
 
     var chartLabelsJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? new List<string>());
     var chartDataJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData ?? new List<decimal>());
+    var usage = ViewBag.SubscriptionUsage as BillCraft.Web.Models.SubscriptionUsageDto;
 }
 
 <!-- Top Header Section -->
@@ -21,6 +22,97 @@
         </a>
     </div>
 </div>
+
+<!-- Subscription Usage Limit Progress Card -->
+@if (usage != null)
+{
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary-subtle text-primary p-2 rounded-3">
+                    <i class="bi bi-speedometer2 fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">সাবস্ক্রিপশন ব্যবহার ও সীমা (<span class="text-primary">@usage.PlanName</span>)</h6>
+                    <small class="text-muted">আপনার বর্তমান প্ল্যানের ব্যবহৃত লিমিট</small>
+                </div>
+            </div>
+            <a asp-controller="Subscription" asp-action="Index" class="btn btn-sm btn-outline-primary rounded-3 fw-semibold">
+                <i class="bi bi-arrow-up-circle me-1"></i> প্ল্যান আপগ্রেড করুন
+            </a>
+        </div>
+        <div class="row g-3">
+            <!-- Clients Progress -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded-3 bg-light-subtle">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold small">ক্লায়েন্ট লিমিট</span>
+                        <small class="fw-bold">
+                            @usage.ClientCount / @(usage.MaxClients == -1 ? "∞" : usage.MaxClients)
+                        </small>
+                    </div>
+                    @if (usage.MaxClients != -1)
+                    {
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar @(usage.ClientUsagePercentage >= 80 ? "bg-danger" : "bg-primary")"
+                                 role="progressbar" style="width: @usage.ClientUsagePercentage%"></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-2">আনলিমিটেড</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Invoices Progress -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded-3 bg-light-subtle">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold small">চলতি মাসের ইনভয়েস</span>
+                        <small class="fw-bold">
+                            @usage.InvoiceCountThisMonth / @(usage.MaxInvoicesPerMonth == -1 ? "∞" : usage.MaxInvoicesPerMonth)
+                        </small>
+                    </div>
+                    @if (usage.MaxInvoicesPerMonth != -1)
+                    {
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar @(usage.InvoiceUsagePercentage >= 80 ? "bg-danger" : "bg-info")"
+                                 role="progressbar" style="width: @usage.InvoiceUsagePercentage%"></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-2">আনলিমিটেড</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Products Progress -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded-3 bg-light-subtle">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold small">প্রোডাক্টস / সার্ভিসেস</span>
+                        <small class="fw-bold">
+                            @usage.ProductCount / @(usage.MaxProducts == -1 ? "∞" : usage.MaxProducts)
+                        </small>
+                    </div>
+                    @if (usage.MaxProducts != -1)
+                    {
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar @(usage.ProductUsagePercentage >= 80 ? "bg-danger" : "bg-warning")"
+                                 role="progressbar" style="width: @usage.ProductUsagePercentage%"></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-2">আনলিমিটেড</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 <!-- 4 Summary Status Cards -->
 <div class="row g-3 mb-4">

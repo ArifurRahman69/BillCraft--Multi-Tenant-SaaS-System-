@@ -1,4 +1,5 @@
 ﻿using BillCraft.Web.Data;
+using BillCraft.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 // 2. Register Tenant Services BEFORE DbContext
 builder.Services.AddScoped<ITenantProvider, TenantProvider>();

@@ -4,6 +4,7 @@ using BillCraft.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260802142634_AddSubscriptionTables")]
+    partial class AddSubscriptionTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,44 +202,6 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Migrations
                     b.HasKey("PlanId");
 
                     b.ToTable("Plans");
-
-                    b.HasData(
-                        new
-                        {
-                            PlanId = 1,
-                            Description = "নতুন ইউজারদের জন্য স্টার্টার প্যাকেজ",
-                            DurationInDays = 30,
-                            IsActive = true,
-                            MaxClients = 5,
-                            MaxInvoicesPerMonth = 10,
-                            MaxProducts = 5,
-                            Name = "Free Trial",
-                            Price = 0.00m
-                        },
-                        new
-                        {
-                            PlanId = 2,
-                            Description = "ছোট ও মাঝারি ব্যবসার জন্য উপযুক্ত",
-                            DurationInDays = 30,
-                            IsActive = true,
-                            MaxClients = 50,
-                            MaxInvoicesPerMonth = 100,
-                            MaxProducts = 50,
-                            Name = "Standard",
-                            Price = 999.00m
-                        },
-                        new
-                        {
-                            PlanId = 3,
-                            Description = "লার্জ স্কেল ব্যবসার জন্য আনলিমিটেড অ্যাক্সেস",
-                            DurationInDays = 30,
-                            IsActive = true,
-                            MaxClients = -1,
-                            MaxInvoicesPerMonth = -1,
-                            MaxProducts = -1,
-                            Name = "Pro Unlimited",
-                            Price = 2499.00m
-                        });
                 });
 
             modelBuilder.Entity("BillCraft.Web.Models.Product", b =>

@@ -1,4 +1,5 @@
 ﻿using BillCraft.Web.Data;
+using BillCraft.Web.Services;
 using BillCraft__Multi_Tenant_SaaS_System_.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,16 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly ISubscriptionService _subscriptionService;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
+        public HomeController(
+            ILogger<HomeController> logger,
+            ApplicationDbContext context,
+            ISubscriptionService subscriptionService)
         {
             _logger = logger;
             _context = context;
+            _subscriptionService = subscriptionService;
         }
 
         public async Task<IActionResult> Index()
@@ -35,6 +41,10 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
 
             try
             {
+                // Subscription Usage Limit Data Fetching
+                var usageData = await _subscriptionService.GetSubscriptionUsageAsync();
+                ViewBag.SubscriptionUsage = usageData;
+
                 var now = DateTime.Now;
 
                 // IgnoreQueryFilters() ব্যবহার করে গ্লোবাল ফিল্টার বাইপাস করা হচ্ছে যেন ডাটা নিশ্চিতভাবে আসে

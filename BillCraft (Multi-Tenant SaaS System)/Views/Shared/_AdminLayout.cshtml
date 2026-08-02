@@ -170,15 +170,18 @@
             <div class="nav-section-title">Settings & System</div>
             <ul class="sidebar-menu">
                 <li>
-                    <a href="#">
-                        <i class="bi bi-gear-fill"></i> Tenant Settings
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Subscription" ? "active" : "")"
+                       asp-controller="Subscription"
+                       asp-action="Index">
+                        <i class="bi bi-card-checklist me-2"></i> Subscriptions
                     </a>
                 </li>
                 <li>
                     <a href="#">
-                        <i class="bi bi-credit-card-fill"></i> Subscriptions
+                        <i class="bi bi-gear-fill"></i> Tenant Settings
                     </a>
                 </li>
+                
             </ul>
         </div>
 

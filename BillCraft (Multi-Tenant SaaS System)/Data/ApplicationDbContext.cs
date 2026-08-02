@@ -23,8 +23,10 @@ namespace BillCraft.Web.Data
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Client> Clients { get; set; } = null!;
         public DbSet<Product> Products { get; set; } = null!;
-        public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<Invoice> Invoices { get; set; } = null!;
+        public DbSet<InvoiceItem> InvoiceItems { get; set; } = null!;
+        public DbSet<Plan> Plans { get; set; } = null!;
+        public DbSet<TenantSubscription> TenantSubscriptions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,7 +50,47 @@ namespace BillCraft.Web.Data
                 .WithMany(p => p.Tenants)
                 .HasForeignKey(t => t.PlanId);
 
-            // 4. Automatic Global Query Filter for Multi-Tenancy
+            // 4. Seed Default Plans
+            modelBuilder.Entity<Plan>().HasData(
+                new Plan
+                {
+                    PlanId = 1,
+                    Name = "Free Trial",
+                    Description = "নতুন ইউজারদের জন্য স্টার্টার প্যাকেজ",
+                    Price = 0.00m,
+                    DurationInDays = 30,
+                    MaxClients = 5,
+                    MaxInvoicesPerMonth = 10,
+                    MaxProducts = 5,
+                    IsActive = true
+                },
+                new Plan
+                {
+                    PlanId = 2,
+                    Name = "Standard",
+                    Description = "ছোট ও মাঝারি ব্যবসার জন্য উপযুক্ত",
+                    Price = 999.00m,
+                    DurationInDays = 30,
+                    MaxClients = 50,
+                    MaxInvoicesPerMonth = 100,
+                    MaxProducts = 50,
+                    IsActive = true
+                },
+                new Plan
+                {
+                    PlanId = 3,
+                    Name = "Pro Unlimited",
+                    Description = "লার্জ স্কেল ব্যবসার জন্য আনলিমিটেড অ্যাক্সেস",
+                    Price = 2499.00m,
+                    DurationInDays = 30,
+                    MaxClients = -1,
+                    MaxInvoicesPerMonth = -1,
+                    MaxProducts = -1,
+                    IsActive = true
+                }
+            );
+
+            // 5. Automatic Global Query Filter for Multi-Tenancy
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
@@ -68,8 +110,6 @@ namespace BillCraft.Web.Data
             {
                 if (entry.State == EntityState.Added)
                 {
-                    // রেজিস্ট্রেশনের সময় যদি Controller থেকে ইতোমধ্যে TenantId বসানো হয়ে থাকে, 
-                    // তবে সেটি ওভাররাইট করবে না। শুধুমাত্র খালি থাকলে CurrentTenantId বসাবে।
                     if (string.IsNullOrEmpty(entry.Entity.TenantId) && !string.IsNullOrEmpty(currentTenant))
                     {
                         entry.Entity.TenantId = currentTenant;
@@ -80,7 +120,7 @@ namespace BillCraft.Web.Data
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        // Dynamic MemberAccess Expression (মেমোরি ক্যাশিং প্রবলেম ফিক্স করা হয়েছে)
+        // Dynamic MemberAccess Expression
         private LambdaExpression GetTenantFilterExpression(Type type)
         {
             var parameter = Expression.Parameter(type, "e");
