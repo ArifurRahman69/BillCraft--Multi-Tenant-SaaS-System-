@@ -13,7 +13,7 @@ namespace BillCraft.Web.Models
         [StringLength(100, ErrorMessage = "নাম ১০০ অক্ষরের বেশি হতে পারবে না")]
         public string Name { get; set; } = string.Empty;
 
-        // Email Validation (@gmail.com বাধ্যতামূলক যদি ইনপুট দেওয়া হয়)
+        // Email Validation (@gmail.com বাধ্যতামূলক যদি ইনপুট দেওয়া হয়)
         [EmailAddress(ErrorMessage = "সঠিক ইমেইল ফরম্যাট দিন")]
         [RegularExpression(@"^[a-zA-Z0-9._%+-]+@gmail\.com$", ErrorMessage = "ইমেইলটি অবশ্যই একটি বৈধ @gmail.com ঠিকানা হতে হবে")]
         public string? Email { get; set; }

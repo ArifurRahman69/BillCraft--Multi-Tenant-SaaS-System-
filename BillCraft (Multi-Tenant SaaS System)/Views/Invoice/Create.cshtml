@@ -1,0 +1,308 @@
+﻿@model BillCraft.Web.Models.InvoiceCreateViewModel
+
+@{
+    ViewData["Title"] = "Create New Invoice";
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+}
+
+<form asp-action="Create" method="post" id="invoiceForm">
+    @Html.AntiForgeryToken()
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Create New Invoice</h4>
+            <p class="text-muted small mb-0">কাস্টমারের জন্য নতুন ইনভয়েস তৈরি করুন।</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-3">Cancel</a>
+            <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Save Invoice</button>
+        </div>
+    </div>
+
+    <!-- Global Model Validation Summary -->
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4"></div>
+
+    <div class="row g-4">
+        <!-- Left Column: Customer & Basic Details -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-person me-2"></i>Customer Information</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="ClientId" class="form-label fw-semibold text-secondary small">Select Client <span class="text-danger">*</span></label>
+                        <select asp-for="ClientId" asp-items="Model.ClientList" class="form-select rounded-3">
+                            <option value="">-- কাস্টমার সিলেক্ট করুন --</option>
+                        </select>
+                        <span asp-validation-for="ClientId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="InvoiceNumber" class="form-label fw-semibold text-secondary small">Invoice Number <span class="text-danger">*</span></label>
+                        <input asp-for="InvoiceNumber" class="form-control rounded-3 bg-light" readonly />
+                        <span asp-validation-for="InvoiceNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="IssueDate" class="form-label fw-semibold text-secondary small">Issue Date</label>
+                        <input asp-for="IssueDate" type="date" class="form-control rounded-3" />
+                        <span asp-validation-for="IssueDate" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="DueDate" class="form-label fw-semibold text-secondary small">Due Date</label>
+                        <input asp-for="DueDate" type="date" class="form-control rounded-3" />
+                        <span asp-validation-for="DueDate" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-primary mb-0"><i class="bi bi-box-seam me-2"></i>Invoice Items</h6>
+                    <button type="button" id="addItemBtn" class="btn btn-sm btn-outline-primary rounded-3">
+                        <i class="bi bi-plus-lg me-1"></i> Add Item
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle" id="itemsTable">
+                        <thead class="bg-light small text-secondary">
+                            <tr>
+                                <th style="width: 35%;">Item / Service</th>
+                                <th style="width: 15%;">Qty</th>
+                                <th style="width: 20%;">Unit Price (৳)</th>
+                                <th style="width: 20%;">Total (৳)</th>
+                                <th style="width: 10%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            @if (Model.Items != null && Model.Items.Count > 0)
+                            {
+                                for (int i = 0; i < Model.Items.Count; i++)
+                                {
+                                    <tr class="item-row">
+                                        <td>
+                                            <select name="Items[@i].ProductId" class="form-select rounded-3 product-select">
+                                                <option value="">-- Select Product --</option>
+                                                @foreach (var prod in Model.ProductList)
+                                                {
+                                                    var isSelected = Model.Items[i].ProductId?.ToString() == prod.Value;
+                                                    <option value="@prod.Value" selected="@isSelected">@prod.Text</option>
+                                                }
+                                            </select>
+                                            <input type="hidden" name="Items[@i].Description" class="item-desc" value="@Model.Items[i].Description" />
+                                        </td>
+                                        <td>
+                                            <input type="number" name="Items[@i].Quantity" class="form-control rounded-3 qty-input" value="@Model.Items[i].Quantity" min="1" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+                                        </td>
+                                        <td>
+                                            <input type="number" name="Items[@i].UnitPrice" class="form-control rounded-3 price-input" value="@Model.Items[i].UnitPrice" step="0.01" />
+                                        </td>
+                                        <td>
+                                            <input type="number" name="Items[@i].Amount" class="form-control rounded-3 amount-input" value="@Model.Items[i].Amount" readonly />
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 remove-row"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Calculation Summary -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>Payment Summary</h6>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Sub Total</span>
+                    <span class="fw-semibold" id="lblSubTotal">৳@Model.SubTotal.ToString("F2")</span>
+                    <input type="hidden" asp-for="SubTotal" id="inputSubTotal" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="TaxAmount" class="form-label fw-semibold text-secondary small">Tax (৳)</label>
+                    <input asp-for="TaxAmount" type="number" step="0.01" class="form-control rounded-3 calc-input" id="inputTax" />
+                    <span asp-validation-for="TaxAmount" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DiscountAmount" class="form-label fw-semibold text-secondary small">Discount (৳)</label>
+                    <input asp-for="DiscountAmount" type="number" step="0.01" class="form-control rounded-3 calc-input" id="inputDiscount" />
+                    <span asp-validation-for="DiscountAmount" class="text-danger small"></span>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold fs-5 text-dark">Total Amount</span>
+                    <span class="fw-bold fs-5 text-primary" id="lblTotal">৳@Model.TotalAmount.ToString("F2")</span>
+                    <input type="hidden" asp-for="TotalAmount" id="inputTotal" />
+                </div>
+
+                <div class="mt-3">
+                    <label asp-for="Notes" class="form-label fw-semibold text-secondary small">Notes / Terms</label>
+                    <textarea asp-for="Notes" class="form-control rounded-3" rows="3" placeholder="ধন্যবাদান্তে..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Dynamic Rows Dropdown Template -->
+<select id="productDropdownTemplate" class="d-none">
+    <option value="">-- Select Product --</option>
+    @if (Model.ProductList != null)
+    {
+        @foreach (var prod in Model.ProductList)
+        {
+            <option value="@prod.Value">@prod.Text</option>
+        }
+    }
+</select>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function addRow() {
+            let dropdownHtml = $('#productDropdownTemplate').html();
+            let row = `
+                <tr class="item-row">
+                    <td>
+                        <select class="form-select rounded-3 product-select">
+                            ${dropdownHtml}
+                        </select>
+                        <input type="hidden" class="item-desc" />
+                    </td>
+                    <td>
+                        <input type="number" class="form-control rounded-3 qty-input" value="1" min="1" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+                    </td>
+                    <td>
+                        <input type="number" class="form-control rounded-3 price-input" value="0" step="0.01" />
+                    </td>
+                    <td>
+                        <input type="number" class="form-control rounded-3 amount-input" value="0" readonly />
+                    </td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-3 remove-row"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+            $('#itemsBody').append(row);
+            reIndexRows();
+        }
+
+        // ASP.NET Core Model Binding Indexing
+        function reIndexRows() {
+            $('#itemsBody tr.item-row').each(function (index, tr) {
+                $(tr).find('.product-select').attr('name', `Items[${index}].ProductId`);
+                $(tr).find('.item-desc').attr('name', `Items[${index}].Description`);
+                $(tr).find('.qty-input').attr('name', `Items[${index}].Quantity`);
+                $(tr).find('.price-input').attr('name', `Items[${index}].UnitPrice`);
+                $(tr).find('.amount-input').attr('name', `Items[${index}].Amount`);
+            });
+        }
+
+        function calculateRowTotal($row) {
+            let qty = parseInt($row.find('.qty-input').val()) || 0;
+            let price = parseFloat($row.find('.price-input').val()) || 0;
+            let amount = qty * price;
+            $row.find('.amount-input').val(amount.toFixed(2));
+
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let subTotal = 0;
+            $('.amount-input').each(function () {
+                subTotal += parseFloat($(this).val()) || 0;
+            });
+
+            // SubTotal এর উপর ৫% ট্যাক্স এবং ১০% ডিসকাউন্ট হিসাব করা হচ্ছে
+            let autoTax = subTotal * 0.05;      // 5% Tax
+            let autoDiscount = subTotal * 0.10; // 10% Discount
+
+            // ট্যাক্স ও ডিসকাউন্ট ফিল্ডে অটোমান সেট করা
+            $('#inputTax').val(autoTax.toFixed(2));
+            $('#inputDiscount').val(autoDiscount.toFixed(2));
+
+            let total = subTotal + autoTax - autoDiscount;
+            if (total < 0) total = 0;
+
+            $('#lblSubTotal').text('৳' + subTotal.toFixed(2));
+            $('#inputSubTotal').val(subTotal.toFixed(2));
+
+            $('#lblTotal').text('৳' + total.toFixed(2));
+            $('#inputTotal').val(total.toFixed(2));
+        }
+
+        // ইউজার যদি ম্যানুয়ালি Tax বা Discount ফিল্ড এডিট করে
+        function calculateCustomTotals() {
+            let subTotal = parseFloat($('#inputSubTotal').val()) || 0;
+            let tax = parseFloat($('#inputTax').val()) || 0;
+            let discount = parseFloat($('#inputDiscount').val()) || 0;
+
+            let total = subTotal + tax - discount;
+            if (total < 0) total = 0;
+
+            $('#lblTotal').text('৳' + total.toFixed(2));
+            $('#inputTotal').val(total.toFixed(2));
+        }
+
+        $(document).ready(function () {
+            if ($('#itemsBody tr.item-row').length === 0) {
+                addRow();
+            } else {
+                calculateTotals();
+            }
+
+            $('#addItemBtn').click(function () {
+                addRow();
+            });
+
+            $(document).on('click', '.remove-row', function () {
+                if ($('#itemsBody tr.item-row').length > 1) {
+                    $(this).closest('tr').remove();
+                    reIndexRows();
+                    calculateTotals();
+                } else {
+                    alert('কমপক্ষে একটি প্রোডাক্ট সিলেক্ট রাখতে হবে!');
+                }
+            });
+
+            $(document).on('change', '.product-select', function () {
+                let $row = $(this).closest('tr');
+                let productId = $(this).val();
+
+                if (productId) {
+                    $.get('/Invoice/GetProductDetails/' + productId, function (data) {
+                        $row.find('.price-input').val(data.price);
+                        $row.find('.item-desc').val(data.description);
+                        calculateRowTotal($row);
+                    }).fail(function() {
+                        alert('প্রোডাক্ট ডাটা লোড করতে সমস্যা হয়েছে।');
+                    });
+                } else {
+                    $row.find('.price-input').val(0);
+                    $row.find('.item-desc').val('');
+                    calculateRowTotal($row);
+                }
+            });
+
+            $(document).on('input change', '.qty-input, .price-input', function () {
+                let $row = $(this).closest('tr');
+                calculateRowTotal($row);
+            });
+
+            $(document).on('input', '#inputTax, #inputDiscount', function () {
+                calculateCustomTotals();
+            });
+        });
+    </script>
+}

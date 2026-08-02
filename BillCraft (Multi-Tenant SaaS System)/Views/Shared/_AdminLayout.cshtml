@@ -140,9 +140,19 @@
                         <i class="bi bi-grid-1x2-fill"></i> Dashboard
                     </a>
                 </li>
-                <li>
-                    <a href="#">
-                        <i class="bi bi-receipt"></i> Invoices
+                <!-- Invoice Menu Item -->
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Invoice" asp-action="Index">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        <span>Invoices</span>
+                    </a>
+                </li>
+
+                <!-- Create Invoice (Optional Quick Link) -->
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Invoice" asp-action="Create">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        <span>Create Invoice</span>
                     </a>
                 </li>
                 <li>

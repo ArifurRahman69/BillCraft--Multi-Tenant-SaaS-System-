@@ -31,6 +31,7 @@
                     <div class="col-md-6">
                         <label asp-for="CompanyName" class="form-label fw-semibold text-secondary small">Company Name</label>
                         <input asp-for="CompanyName" class="form-control rounded-3" placeholder="যেমন: Tech Solutions Ltd." />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
                     </div>
 
                     <div class="col-md-6">
@@ -48,6 +49,7 @@
                     <div class="col-12">
                         <label asp-for="Address" class="form-label fw-semibold text-secondary small">Address</label>
                         <textarea asp-for="Address" class="form-control rounded-3" rows="3" placeholder="ঠিকানা লিখুন..."></textarea>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
                     </div>
                 </div>
 

@@ -1,0 +1,127 @@
+﻿@model IEnumerable<BillCraft.Web.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Invoice List";
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Invoices</h4>
+        <p class="text-muted small mb-0">তৈরি করা সকল ইনভয়েসের তালিকা ও বর্তমান পেমেন্ট স্ট্যাটাস</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary rounded-3 px-3 fw-semibold">
+        <i class="bi bi-plus-lg me-1"></i> Create New Invoice
+    </a>
+</div>
+
+<!-- Alert Message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+        <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Invoice Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <span class="text-muted small">Total Invoiced</span>
+            <h5 class="fw-bold text-primary mb-0 mt-1">৳@Model.Sum(i => i.TotalAmount).ToString("N2")</h5>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <span class="text-muted small">Total Paid</span>
+            <h5 class="fw-bold text-success mb-0 mt-1">৳@Model.Sum(i => i.PaidAmount).ToString("N2")</h5>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <span class="text-muted small">Total Due</span>
+            <h5 class="fw-bold text-danger mb-0 mt-1">৳@Model.Sum(i => i.DueAmount).ToString("N2")</h5>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <span class="text-muted small">Total Count</span>
+            <h5 class="fw-bold text-dark mb-0 mt-1">@Model.Count()</h5>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Table Card -->
+<div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="bg-light small text-secondary">
+                <tr>
+                    <th>Invoice No</th>
+                    <th>Client</th>
+                    <th>Issue Date</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Paid</th>
+                    <th class="text-end">Due</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var invoice in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold text-primary">@invoice.InvoiceNumber</td>
+                            <td>
+                                <div class="fw-semibold text-dark">@(invoice.Client?.Name ?? "N/A")</div>
+                                @if (!string.IsNullOrEmpty(invoice.Client?.Phone))
+                                {
+                                    <small class="text-muted">@invoice.Client.Phone</small>
+                                }
+                            </td>
+                            <td>@invoice.IssueDate.ToString("yyyy-MM-dd")</td>
+                            <td class="text-end fw-semibold">৳@invoice.TotalAmount.ToString("N2")</td>
+                            <td class="text-end text-success fw-semibold">৳@invoice.PaidAmount.ToString("N2")</td>
+                            <td class="text-end text-danger fw-semibold">৳@invoice.DueAmount.ToString("N2")</td>
+                            <td class="text-center">
+                                @if (invoice.Status == "Paid")
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Paid</span>
+                                }
+                                else if (invoice.Status == "Partially Paid")
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Partially Paid</span>
+                                }
+                                else if (invoice.Status == "Unpaid")
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Unpaid</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3">@invoice.Status</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@invoice.InvoiceId" class="btn btn-sm btn-light border rounded-3 me-1" title="View / Print">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            কোনো ইনভয়েস পাওয়া যায়নি। নতুন ইনভয়েস তৈরি করতে উপরে <strong>Create New Invoice</strong> বাটনে ক্লিক করুন।
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

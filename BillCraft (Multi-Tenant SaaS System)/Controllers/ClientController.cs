@@ -19,8 +19,9 @@ namespace BillCraft.Web.Controllers
         // GET: Client/Index
         public async Task<IActionResult> Index()
         {
-            // শুধুমাত্র অ্যাক্টিভ (IsActive = true) ক্লায়েন্টদের নিয়ে আসবে
+            // শুধুমাত্র অ্যাক্টিভ (IsActive = true) ক্লায়েন্টদের নিয়ে আসবে
             var clients = await _context.Clients
+                .AsNoTracking()
                 .Where(c => c.IsActive)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
@@ -39,12 +40,19 @@ namespace BillCraft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Client client)
         {
-            if (!ModelState.IsValid) return View(client);
-
             var tenantId = User.FindFirst("TenantId")?.Value;
             if (!string.IsNullOrEmpty(tenantId))
             {
                 client.TenantId = tenantId;
+            }
+
+            // TenantId মডেলে অ্যাসাইন করার পর ModelState re-validate নিশ্চিত করা
+            ModelState.Clear();
+            TryValidateModel(client);
+
+            if (!ModelState.IsValid)
+            {
+                return View(client);
             }
 
             _context.Clients.Add(client);
@@ -72,18 +80,26 @@ namespace BillCraft.Web.Controllers
         {
             if (id != client.ClientId) return NotFound();
 
-            if (!ModelState.IsValid) return View(client);
+            var existingClient = await _context.Clients.FindAsync(id);
+            if (existingClient == null || !existingClient.IsActive) return NotFound();
+
+            // নাম, কোম্পানি নাম, ফোন, ইমেইল ও এড্রেস আপডেট করা
+            existingClient.Name = client.Name;
+            existingClient.CompanyName = client.CompanyName;
+            existingClient.Phone = client.Phone;
+            existingClient.Email = client.Email;
+            existingClient.Address = client.Address;
+
+            ModelState.Clear();
+            TryValidateModel(existingClient);
+
+            if (!ModelState.IsValid)
+            {
+                return View(client);
+            }
 
             try
             {
-                var existingClient = await _context.Clients.FindAsync(id);
-                if (existingClient == null || !existingClient.IsActive) return NotFound();
-
-                // কেবল অনুমতিপ্রাপ্ত ফিল্ড আপডেট করা হচ্ছে (Name ও CompanyName অপরিবর্তিত থাকবে)
-                existingClient.Phone = client.Phone;
-                existingClient.Email = client.Email;
-                existingClient.Address = client.Address;
-
                 _context.Update(existingClient);
                 await _context.SaveChangesAsync();
 
