@@ -1,0 +1,117 @@
+﻿@model IEnumerable<BillCraft.Web.Models.Expense>
+
+@{
+    ViewData["Title"] = "Expense Management";
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Expense Tracker</h4>
+        <p class="text-muted small mb-0">আপনার ব্যবসায়ের যাবতীয় খরচের হিসাব ও রসিদ সংরাক্ষণ।</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Categories" class="btn btn-outline-secondary rounded-3 fw-semibold btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-tags"></i> Categories
+        </a>
+        <a asp-action="Create" class="btn btn-primary rounded-3 fw-semibold btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i> Add New Expense
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Expense Summary Card -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-semibold">Total Expenses</span>
+                    <h3 class="fw-bold text-danger mt-1 mb-0">৳ @(((decimal)(ViewBag.TotalExpenses ?? 0)).ToString("N2"))</h3>
+                </div>
+                <div class="bg-danger-subtle text-danger p-3 rounded-4">
+                    <i class="bi bi-receipt fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Date</th>
+                    <th>Category</th>
+                    <th>Title / Notes</th>
+                    <th>Amount</th>
+                    <th>Receipt</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-semibold text-muted">@item.ExpenseDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle rounded-2">
+                                    @(item.Category?.Name ?? "General")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">@(item.Title ?? "N/A")</div>
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    <small class="text-muted">@item.Description</small>
+                                }
+                            </td>
+                            <td class="fw-bold text-danger">৳ @item.Amount.ToString("N2")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.ReceiptFilePath))
+                                {
+                                    <a href="@item.ReceiptFilePath" target="_blank" class="btn btn-sm btn-light border rounded-2">
+                                        <i class="bi bi-paperclip me-1"></i> View Receipt
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">No File</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('আপনি কি নিশ্চিতভাবে এই খরচের এন্ট্রিটি মুছে ফেলতে চান?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-2">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-wallet2 fs-1 d-block mb-2 text-secondary"></i>
+                            কোনো খরচের রেকর্ড খুঁজে পাওয়া যায়নি।
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

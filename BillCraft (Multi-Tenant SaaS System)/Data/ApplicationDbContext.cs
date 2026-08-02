@@ -27,6 +27,8 @@ namespace BillCraft.Web.Data
         public DbSet<InvoiceItem> InvoiceItems { get; set; } = null!;
         public DbSet<Plan> Plans { get; set; } = null!;
         public DbSet<TenantSubscription> TenantSubscriptions { get; set; } = null!;
+        public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

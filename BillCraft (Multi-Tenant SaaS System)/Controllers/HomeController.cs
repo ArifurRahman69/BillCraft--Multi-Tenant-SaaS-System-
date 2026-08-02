@@ -37,7 +37,8 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
             ViewBag.TenantId = tenantIdStr;
 
             var chartLabels = new List<string>();
-            var chartData = new List<decimal>();
+            var chartRevenueData = new List<decimal>();
+            var chartExpenseData = new List<decimal>();
 
             try
             {
@@ -50,6 +51,7 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
                 // IgnoreQueryFilters() ব্যবহার করে গ্লোবাল ফিল্টার বাইপাস করা হচ্ছে যেন ডাটা নিশ্চিতভাবে আসে
                 var allInvoices = await _context.Invoices.IgnoreQueryFilters().AsNoTracking().ToListAsync();
                 var allClients = await _context.Clients.IgnoreQueryFilters().AsNoTracking().ToListAsync();
+                var allExpenses = await _context.Expenses.IgnoreQueryFilters().AsNoTracking().ToListAsync();
 
                 // ১. Total Invoices & Active Clients
                 ViewBag.TotalInvoices = allInvoices.Count;
@@ -58,14 +60,23 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
                 // ২. Total Due Calculation
                 ViewBag.TotalDue = allInvoices.Sum(i => i.DueAmount);
 
-                // ৩. Monthly Sales (চলতি মাসের মোট সেল, ডাটা না থাকলে সর্বমোট সেল)
+                // ৩. Monthly Sales & Expenses
                 var currentMonthSales = allInvoices
                     .Where(i => i.IssueDate.Month == now.Month && i.IssueDate.Year == now.Year)
                     .Sum(i => i.TotalAmount);
 
-                ViewBag.MonthlySales = currentMonthSales > 0 ? currentMonthSales : allInvoices.Sum(i => i.TotalAmount);
+                var currentMonthExpenses = allExpenses
+                    .Where(e => e.ExpenseDate.Month == now.Month && e.ExpenseDate.Year == now.Year)
+                    .Sum(e => e.Amount);
 
-                // ৪. Chart Analytics (গত ৬ মাস)
+                decimal totalSales = currentMonthSales > 0 ? currentMonthSales : allInvoices.Sum(i => i.TotalAmount);
+                ViewBag.MonthlySales = totalSales;
+                ViewBag.MonthlyExpenses = currentMonthExpenses;
+
+                // ৪. Net Profit Calculation
+                ViewBag.NetProfit = totalSales - currentMonthExpenses;
+
+                // ৫. Chart Analytics (গত ৬ মাস: Revenue vs Expense)
                 for (int i = 5; i >= 0; i--)
                 {
                     var targetDate = now.AddMonths(-i);
@@ -75,8 +86,13 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
                         .Where(inv => inv.IssueDate.Month == targetDate.Month && inv.IssueDate.Year == targetDate.Year)
                         .Sum(inv => inv.TotalAmount);
 
+                    var monthlyExpense = allExpenses
+                        .Where(exp => exp.ExpenseDate.Month == targetDate.Month && exp.ExpenseDate.Year == targetDate.Year)
+                        .Sum(exp => exp.Amount);
+
                     chartLabels.Add(monthName);
-                    chartData.Add(monthlyRevenue);
+                    chartRevenueData.Add(monthlyRevenue);
+                    chartExpenseData.Add(monthlyExpense);
                 }
             }
             catch (Exception ex)
@@ -84,16 +100,20 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
                 _logger.LogError(ex, "Error loading dashboard data");
 
                 ViewBag.MonthlySales = 0m;
+                ViewBag.MonthlyExpenses = 0m;
+                ViewBag.NetProfit = 0m;
                 ViewBag.TotalInvoices = 0;
                 ViewBag.ActiveClients = 0;
                 ViewBag.TotalDue = 0m;
 
                 chartLabels = new List<string> { "Jan", "Feb", "Mar", "Apr", "May", "Jun" };
-                chartData = new List<decimal> { 0, 0, 0, 0, 0, 0 };
+                chartRevenueData = new List<decimal> { 0, 0, 0, 0, 0, 0 };
+                chartExpenseData = new List<decimal> { 0, 0, 0, 0, 0, 0 };
             }
 
             ViewBag.ChartLabels = chartLabels;
-            ViewBag.ChartData = chartData;
+            ViewBag.ChartRevenueData = chartRevenueData;
+            ViewBag.ChartExpenseData = chartExpenseData;
 
             return View();
         }

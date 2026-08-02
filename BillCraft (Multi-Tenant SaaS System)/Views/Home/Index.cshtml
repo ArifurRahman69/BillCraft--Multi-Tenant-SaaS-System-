@@ -3,7 +3,8 @@
     Layout = "/Views/Shared/_AdminLayout.cshtml";
 
     var chartLabelsJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? new List<string>());
-    var chartDataJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData ?? new List<decimal>());
+    var chartRevenueJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartRevenueData ?? new List<decimal>());
+    var chartExpenseJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartExpenseData ?? new List<decimal>());
     var usage = ViewBag.SubscriptionUsage as BillCraft.Web.Models.SubscriptionUsageDto;
 }
 
@@ -114,7 +115,7 @@
     </div>
 }
 
-<!-- 4 Summary Status Cards -->
+<!-- Financial Summary Status Cards -->
 <div class="row g-3 mb-4">
     <!-- Monthly Sales -->
     <div class="col-md-3">
@@ -123,7 +124,7 @@
                 <div>
                     <span class="text-muted small fw-semibold">Monthly Sales</span>
                     <h3 class="fw-bold mt-2 mb-0">৳ @(((decimal)(ViewBag.MonthlySales ?? 0)).ToString("N2"))</h3>
-                    <small class="text-success fw-semibold"><i class="bi bi-calendar-check"></i> Current Month</small>
+                    <small class="text-success fw-semibold"><i class="bi bi-graph-up-arrow"></i> Total Revenue</small>
                 </div>
                 <div class="bg-primary-subtle text-primary p-3 rounded-4">
                     <i class="bi bi-wallet2 fs-4"></i>
@@ -132,33 +133,35 @@
         </div>
     </div>
 
-    <!-- Total Invoices -->
+    <!-- Monthly Expenses -->
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <span class="text-muted small fw-semibold">Total Invoices</span>
-                    <h3 class="fw-bold mt-2 mb-0">@(ViewBag.TotalInvoices ?? 0)</h3>
-                    <small class="text-info fw-semibold"><i class="bi bi-receipt"></i> All Time Created</small>
+                    <span class="text-muted small fw-semibold">Monthly Expenses</span>
+                    <h3 class="fw-bold text-danger mt-2 mb-0">৳ @(((decimal)(ViewBag.MonthlyExpenses ?? 0)).ToString("N2"))</h3>
+                    <small class="text-danger fw-semibold"><i class="bi bi-graph-down-arrow"></i> Total Expense</small>
                 </div>
-                <div class="bg-warning-subtle text-warning p-3 rounded-4">
+                <div class="bg-danger-subtle text-danger p-3 rounded-4">
                     <i class="bi bi-receipt-cutoff fs-4"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Active Clients -->
+    <!-- Net Profit -->
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <span class="text-muted small fw-semibold">Active Clients</span>
-                    <h3 class="fw-bold mt-2 mb-0">@(ViewBag.ActiveClients ?? 0)</h3>
-                    <small class="text-success fw-semibold"><i class="bi bi-people"></i> Total Registered</small>
+                    <span class="text-muted small fw-semibold">Net Profit</span>
+                    <h3 class="fw-bold @(((decimal)(ViewBag.NetProfit ?? 0)) >= 0 ? "text-success" : "text-danger") mt-2 mb-0">
+                        ৳ @(((decimal)(ViewBag.NetProfit ?? 0)).ToString("N2"))
+                    </h3>
+                    <small class="text-muted fw-semibold"><i class="bi bi-calculator"></i> Revenue - Expense</small>
                 </div>
-                <div class="bg-info-subtle text-info p-3 rounded-4">
-                    <i class="bi bi-people fs-4"></i>
+                <div class="@(((decimal)(ViewBag.NetProfit ?? 0)) >= 0 ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger") p-3 rounded-4">
+                    <i class="bi bi-cash-coin fs-4"></i>
                 </div>
             </div>
         </div>
@@ -170,10 +173,10 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <span class="text-muted small fw-semibold">Total Due</span>
-                    <h3 class="fw-bold text-danger mt-2 mb-0">৳ @(((decimal)(ViewBag.TotalDue ?? 0)).ToString("N2"))</h3>
-                    <small class="text-danger fw-semibold"><i class="bi bi-exclamation-circle"></i> Outstanding</small>
+                    <h3 class="fw-bold text-warning mt-2 mb-0">৳ @(((decimal)(ViewBag.TotalDue ?? 0)).ToString("N2"))</h3>
+                    <small class="text-warning fw-semibold"><i class="bi bi-exclamation-circle"></i> Outstanding</small>
                 </div>
-                <div class="bg-danger-subtle text-danger p-3 rounded-4">
+                <div class="bg-warning-subtle text-warning p-3 rounded-4">
                     <i class="bi bi-cash-stack fs-4"></i>
                 </div>
             </div>
@@ -191,6 +194,9 @@
                 <a asp-controller="Invoice" asp-action="Create" class="btn btn-light text-primary fw-bold text-start p-3 rounded-3 d-flex align-items-center gap-3">
                     <i class="bi bi-plus-circle-fill fs-4"></i> Create New Invoice
                 </a>
+                <a asp-controller="Expense" asp-action="Create" class="btn btn-outline-light fw-semibold text-start p-3 rounded-3 d-flex align-items-center gap-3 border-0 bg-white bg-opacity-10">
+                    <i class="bi bi-receipt fs-4"></i> Record Expense
+                </a>
                 <a asp-controller="Invoice" asp-action="Index" class="btn btn-outline-light fw-semibold text-start p-3 rounded-3 d-flex align-items-center gap-3 border-0 bg-white bg-opacity-10">
                     <i class="bi bi-file-earmark-text fs-4"></i> Invoice History
                 </a>
@@ -202,11 +208,11 @@
     <div class="col-md-8">
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0">Revenue Analytics</h6>
+                <h6 class="fw-bold mb-0">Financial Overview (Revenue vs Expense)</h6>
                 <span class="badge bg-light text-dark border">Last 6 Months</span>
             </div>
-            <div style="height: 200px;">
-                <canvas id="revenueChart"></canvas>
+            <div style="height: 220px;">
+                <canvas id="financialChart"></canvas>
             </div>
         </div>
     </div>
@@ -228,26 +234,39 @@
 @section Scripts {
     <script>
         const chartLabels = @Html.Raw(chartLabelsJson);
-        const chartData = @Html.Raw(chartDataJson);
+        const chartRevenue = @Html.Raw(chartRevenueJson);
+        const chartExpense = @Html.Raw(chartExpenseJson);
 
-        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const ctx = document.getElementById('financialChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: chartLabels,
-                datasets: [{
-                    label: 'Revenue (BDT)',
-                    data: chartData,
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
+                datasets: [
+                    {
+                        label: 'Revenue (BDT)',
+                        data: chartRevenue,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Expense (BDT)',
+                        data: chartExpense,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                },
                 scales: {
                     y: { grid: { display: false }, beginAtZero: true },
                     x: { grid: { display: false } }
