@@ -1,16 +1,27 @@
 ﻿using BillCraft.Web.Data;
 using BillCraft.Web.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BillCraft.Web.Services
 {
     public class SubscriptionService : ISubscriptionService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SubscriptionService(ApplicationDbContext context)
+        public SubscriptionService(
+            ApplicationDbContext context,
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        // লগইন থাকা ইউজারের TenantId বের করার হেলপার মেথড
+        private string GetCurrentTenantId()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirstValue("TenantId") ?? string.Empty;
         }
 
         public async Task<bool> CanCreateClientAsync()
@@ -21,7 +32,10 @@ namespace BillCraft.Web.Services
             // -1 means Unlimited
             if (sub.Plan.MaxClients == -1) return true;
 
-            var clientCount = await _context.Clients.CountAsync(c => c.IsActive);
+            var tenantId = GetCurrentTenantId();
+            var clientCount = await _context.Clients
+                .CountAsync(c => c.TenantId == tenantId && c.IsActive);
+
             return clientCount < sub.Plan.MaxClients;
         }
 
@@ -32,10 +46,12 @@ namespace BillCraft.Web.Services
 
             if (sub.Plan.MaxInvoicesPerMonth == -1) return true;
 
-            // চলতি মাসের মোট ইনভয়েস গণনা
+            var tenantId = GetCurrentTenantId();
             var firstDayOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+
+            // চলতি মাসে এই টেনেটের মোট ইনভয়েস গণনা
             var invoiceCount = await _context.Invoices
-                .Where(i => i.CreatedAt >= firstDayOfMonth)
+                .Where(i => i.TenantId == tenantId && i.CreatedAt >= firstDayOfMonth)
                 .CountAsync();
 
             return invoiceCount < sub.Plan.MaxInvoicesPerMonth;
@@ -48,18 +64,27 @@ namespace BillCraft.Web.Services
 
             if (sub.Plan.MaxProducts == -1) return true;
 
-            var productCount = await _context.Products.CountAsync();
+            var tenantId = GetCurrentTenantId();
+            var productCount = await _context.Products
+                .CountAsync(p => p.TenantId == tenantId);
+
             return productCount < sub.Plan.MaxProducts;
         }
 
         public async Task<SubscriptionUsageDto> GetSubscriptionUsageAsync()
         {
+            var tenantId = GetCurrentTenantId();
             var sub = await GetActiveSubscriptionAsync();
             var firstDayOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
 
-            var clientCount = await _context.Clients.CountAsync(c => c.IsActive);
-            var productCount = await _context.Products.CountAsync();
-            var invoiceCount = await _context.Invoices.CountAsync(i => i.CreatedAt >= firstDayOfMonth);
+            var clientCount = await _context.Clients
+                .CountAsync(c => c.TenantId == tenantId && c.IsActive);
+
+            var productCount = await _context.Products
+                .CountAsync(p => p.TenantId == tenantId);
+
+            var invoiceCount = await _context.Invoices
+                .CountAsync(i => i.TenantId == tenantId && i.CreatedAt >= firstDayOfMonth);
 
             return new SubscriptionUsageDto
             {
@@ -76,9 +101,12 @@ namespace BillCraft.Web.Services
 
         private async Task<TenantSubscription?> GetActiveSubscriptionAsync()
         {
+            var tenantId = GetCurrentTenantId();
+
             return await _context.TenantSubscriptions
                 .Include(s => s.Plan)
-                .FirstOrDefaultAsync(s => s.IsActive && s.EndDate >= DateTime.UtcNow);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.IsActive && s.EndDate >= DateTime.UtcNow);
         }
     }
 }

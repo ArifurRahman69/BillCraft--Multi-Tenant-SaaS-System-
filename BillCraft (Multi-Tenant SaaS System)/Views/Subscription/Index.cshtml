@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<BillCraft.Web.Models.Plan>
 @{
     ViewData["Title"] = "Subscription Plans";
+    Layout = "_AdminLayout"; // এই লাইনটি সাইডবার যুক্ত করবে
     var currentSub = ViewBag.CurrentSubscription as BillCraft.Web.Models.TenantSubscription;
 }
 
@@ -8,7 +9,7 @@
     <!-- Header -->
     <div class="text-center mb-5">
         <h2 class="fw-bold text-primary">আপনার সাবস্ক্রিপশন প্ল্যান নির্বাচন করুন</h2>
-        <p class="text-muted">আপনার ব্যবসার প্রয়োজন অনুযায়ী সেরা সার্ভিস প্যাকেজ বেছে নিন</p>
+        <p class="text-muted">আপনার ব্যবসার প্রয়োজন অনুযায়ী সেরা সার্ভিস প্যাকেজ বেছে নিন</p>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
@@ -27,7 +28,7 @@
                 <div>
                     <span class="badge bg-warning text-dark mb-1">অ্যাক্টিভ প্ল্যান</span>
                     <h4 class="mb-1">@currentSub.Plan.Name Plan</h4>
-                    <p class="mb-0 text-white-50">মেয়াদ শেষ হবে: <strong>@currentSub.EndDate.ToString("dd MMM yyyy")</strong></p>
+                    <p class="mb-0 text-white-50">মেয়াদ শেষ হবে: <strong>@currentSub.EndDate.ToString("dd MMM yyyy")</strong></p>
                 </div>
                 <div class="mt-2 mt-md-0">
                     <span class="fs-5 fw-bold">৳@currentSub.Plan.Price.ToString("N2") / মাস</span>
@@ -59,11 +60,11 @@
                         <ul class="list-unstyled flex-grow-1 my-3">
                             <li class="mb-2">
                                 <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                <strong>@(plan.MaxClients == -1 ? "আনলিমিটেড" : plan.MaxClients.ToString())</strong> ক্লায়েন্ট
+                                <strong>@(plan.MaxClients == -1 ? "আনলিমিটেড" : plan.MaxClients.ToString())</strong> ক্লায়েন্ট
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                <strong>@(plan.MaxInvoicesPerMonth == -1 ? "আনলিমিটেড" : plan.MaxInvoicesPerMonth.ToString())</strong> ইনভয়েস/মাস
+                                <strong>@(plan.MaxInvoicesPerMonth == -1 ? "আনলিমিটেড" : plan.MaxInvoicesPerMonth.ToString())</strong> ইনভয়েস/মাস
                             </li>
                             <li class="mb-2">
                                 <i class="bi bi-check-circle-fill text-success me-2"></i>

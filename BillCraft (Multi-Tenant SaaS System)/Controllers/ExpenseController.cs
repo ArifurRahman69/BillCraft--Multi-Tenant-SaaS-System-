@@ -3,6 +3,7 @@ using BillCraft.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 using System.Security.Claims;
 
 namespace BillCraft.Web.Controllers
@@ -19,10 +20,18 @@ namespace BillCraft.Web.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        private string GetCurrentTenantId()
+        {
+            return User.FindFirstValue("TenantId") ?? string.Empty;
+        }
+
         // GET: Expense List
         public async Task<IActionResult> Index()
         {
+            var tenantId = GetCurrentTenantId();
+
             var expenses = await _context.Expenses
+                .Where(e => e.TenantId == tenantId)
                 .Include(e => e.Category)
                 .OrderByDescending(e => e.ExpenseDate)
                 .AsNoTracking()
@@ -35,7 +44,11 @@ namespace BillCraft.Web.Controllers
         // GET: Expense/Create
         public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = await _context.ExpenseCategories.Where(c => c.IsActive).ToListAsync();
+            var tenantId = GetCurrentTenantId();
+            ViewBag.Categories = await _context.ExpenseCategories
+                .Where(c => c.TenantId == tenantId && c.IsActive)
+                .ToListAsync();
+
             return View();
         }
 
@@ -44,10 +57,11 @@ namespace BillCraft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Expense expense, IFormFile? receiptFile)
         {
+            var tenantId = GetCurrentTenantId();
+
             if (ModelState.IsValid)
             {
-                var tenantId = User.FindFirstValue("TenantId");
-                expense.TenantId = tenantId ?? string.Empty;
+                expense.TenantId = tenantId;
                 expense.CreatedAt = DateTime.UtcNow;
 
                 // Receipt File Upload Handling
@@ -73,18 +87,26 @@ namespace BillCraft.Web.Controllers
                 _context.Add(expense);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "খরচ সফলভাবে এন্ট্রি করা হয়েছে!";
+                TempData["SuccessMessage"] = "খরচ সফলভাবে এন্ট্রি করা হয়েছে!";
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Categories = await _context.ExpenseCategories.Where(c => c.IsActive).ToListAsync();
+            ViewBag.Categories = await _context.ExpenseCategories
+                .Where(c => c.TenantId == tenantId && c.IsActive)
+                .ToListAsync();
+
             return View(expense);
         }
 
         // GET: Expense Categories List & Quick Add
         public async Task<IActionResult> Categories()
         {
-            var categories = await _context.ExpenseCategories.AsNoTracking().ToListAsync();
+            var tenantId = GetCurrentTenantId();
+            var categories = await _context.ExpenseCategories
+                .Where(c => c.TenantId == tenantId)
+                .AsNoTracking()
+                .ToListAsync();
+
             return View(categories);
         }
 
@@ -95,13 +117,13 @@ namespace BillCraft.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var tenantId = User.FindFirstValue("TenantId");
-                category.TenantId = tenantId ?? string.Empty;
+                var tenantId = GetCurrentTenantId();
+                category.TenantId = tenantId;
 
                 _context.ExpenseCategories.Add(category);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "ক্যাটাগরি সফলভাবে যুক্ত করা হয়েছে!";
+                TempData["SuccessMessage"] = "ক্যাটাগরি সফলভাবে যুক্ত করা হয়েছে!";
             }
             return RedirectToAction(nameof(Categories));
         }
@@ -111,7 +133,9 @@ namespace BillCraft.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var expense = await _context.Expenses.FindAsync(id);
+            var tenantId = GetCurrentTenantId();
+            var expense = await _context.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.TenantId == tenantId);
+
             if (expense != null)
             {
                 // Delete physical receipt file if exists
@@ -126,7 +150,7 @@ namespace BillCraft.Web.Controllers
 
                 _context.Expenses.Remove(expense);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "খরচের রেকর্ড মুছে ফেলা হয়েছে।";
+                TempData["SuccessMessage"] = "খরচের রেকর্ড মুছে ফেলা হয়েছে।";
             }
             return RedirectToAction(nameof(Index));
         }

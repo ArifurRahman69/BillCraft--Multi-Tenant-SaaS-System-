@@ -1,0 +1,178 @@
+﻿@model BillCraft__Multi_Tenant_SaaS_System_.Models.GlobalSearchResultViewModel
+
+@{
+    ViewData["Title"] = "Search Results";
+    int totalResults = Model.Invoices.Count + Model.Clients.Count + Model.Products.Count;
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Search Results</h3>
+            <p class="text-muted mb-0">
+                Showing results for <span class="fw-semibold text-primary">"@Model.Query"</span>
+                <span class="badge bg-secondary ms-2">@totalResults Found</span>
+            </p>
+        </div>
+    </div>
+
+    @if (string.IsNullOrWhiteSpace(Model.Query))
+    {
+        <div class="alert alert-info border-0 shadow-sm rounded-3">
+            <i class="bi bi-info-circle me-2"></i> Please enter a search term in the search bar above.
+        </div>
+    }
+    else if (totalResults == 0)
+    {
+        <div class="text-center py-5 bg-white rounded-3 border shadow-sm">
+            <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+            <h5 class="fw-bold text-secondary">No Results Found</h5>
+            <p class="text-muted">We couldn't find anything matching "@Model.Query". Try searching with a different keyword.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Nav Tabs -->
+        <ul class="nav nav-pills mb-4 gap-2" id="searchTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-semibold" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" type="button" role="tab">
+                    <i class="bi bi-file-earmark-text me-1"></i> Invoices (@Model.Invoices.Count)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="clients-tab" data-bs-toggle="tab" data-bs-target="#clients" type="button" role="tab">
+                    <i class="bi bi-people me-1"></i> Clients (@Model.Clients.Count)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">
+                    <i class="bi bi-box-seam me-1"></i> Products (@Model.Products.Count)
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Contents -->
+        <div class="tab-content" id="searchTabContent">
+
+            <!-- 1. Invoices Tab -->
+            <div class="tab-pane fade show active" id="invoices" role="tabpanel">
+                @if (Model.Invoices.Any())
+                {
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Client</th>
+                                        <th>Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var invoice in Model.Invoices)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-primary">@invoice.InvoiceNumber</td>
+                                            <td>@(invoice.Client?.Name ?? "N/A")</td>
+                                            <td class="fw-semibold">৳@invoice.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <a asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.InvoiceId" class="btn btn-sm btn-outline-primary rounded-2">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted p-4 bg-white rounded-3 border text-center">No invoices found.</div>
+                }
+            </div>
+
+            <!-- 2. Clients Tab -->
+            <div class="tab-pane fade" id="clients" role="tabpanel">
+                @if (Model.Clients.Any())
+                {
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var client in Model.Clients)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@client.Name</td>
+                                            <td>@client.Email</td>
+                                            <td>@client.Phone</td>
+                                            <td>
+                                                <a asp-controller="Client" asp-action="Edit" asp-route-id="@client.ClientId" class="btn btn-sm btn-outline-secondary rounded-2">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted p-4 bg-white rounded-3 border text-center">No clients found.</div>
+                }
+            </div>
+
+            <!-- 3. Products Tab -->
+            <div class="tab-pane fade" id="products" role="tabpanel">
+                @if (Model.Products.Any())
+                {
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Price</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in Model.Products)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@product.Name</td>
+                                            <td class="fw-semibold">$@product.UnitPrice.ToString("N2")</td>
+                                            <td>
+                                                <a asp-controller="Product" asp-action="Edit" asp-route-id="@product.ProductId" class="btn btn-sm btn-outline-secondary rounded-2">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted p-4 bg-white rounded-3 border text-center">No products found.</div>
+                }
+            </div>
+
+        </div>
+    }
+</div>

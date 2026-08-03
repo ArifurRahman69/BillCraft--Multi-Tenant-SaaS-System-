@@ -187,7 +187,6 @@
                         <span>Company Settings</span>
                     </a>
                 </li>
-                
             </ul>
         </div>
 
@@ -204,10 +203,15 @@
 
     <div class="main-wrapper">
         <header class="top-navbar">
-            <div class="search-box">
+            <!-- Fixed Functional Search Box -->
+            <form asp-controller="Search" asp-action="Index" method="get" class="search-box">
                 <i class="bi bi-search"></i>
-                <input type="text" class="form-control" placeholder="Search invoices, clients...">
-            </div>
+                <input type="text"
+                       name="query"
+                       class="form-control"
+                       placeholder="Search invoices, clients..."
+                       value="@Context.Request.Query["query"]" />
+            </form>
 
             <div class="d-flex align-items-center gap-3">
                 <button class="btn btn-light rounded-circle p-2 border-0 text-secondary" type="button">

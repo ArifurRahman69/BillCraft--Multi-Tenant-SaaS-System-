@@ -26,15 +26,20 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
             _subscriptionService = subscriptionService;
         }
 
+        private string GetCurrentTenantId()
+        {
+            return User.FindFirstValue("TenantId") ?? string.Empty;
+        }
+
         public async Task<IActionResult> Index()
         {
+            var tenantId = GetCurrentTenantId();
+
             // Claims Data
             ViewBag.UserName = User.FindFirstValue(ClaimTypes.Name);
             ViewBag.UserEmail = User.FindFirstValue(ClaimTypes.Email);
             ViewBag.UserRole = User.FindFirstValue(ClaimTypes.Role);
-
-            var tenantIdStr = User.FindFirstValue("TenantId");
-            ViewBag.TenantId = tenantIdStr;
+            ViewBag.TenantId = tenantId;
 
             var chartLabels = new List<string>();
             var chartRevenueData = new List<decimal>();
@@ -46,47 +51,57 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
                 var usageData = await _subscriptionService.GetSubscriptionUsageAsync();
                 ViewBag.SubscriptionUsage = usageData;
 
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
 
-                // IgnoreQueryFilters() ব্যবহার করে গ্লোবাল ফিল্টার বাইপাস করা হচ্ছে যেন ডাটা নিশ্চিতভাবে আসে
-                var allInvoices = await _context.Invoices.IgnoreQueryFilters().AsNoTracking().ToListAsync();
-                var allClients = await _context.Clients.IgnoreQueryFilters().AsNoTracking().ToListAsync();
-                var allExpenses = await _context.Expenses.IgnoreQueryFilters().AsNoTracking().ToListAsync();
+                // শুধুমাত্র চলতি টেনেটের ডাটা লোড করা হচ্ছে (Tenant Isolation)
+                var tenantInvoices = await _context.Invoices
+                    .Where(i => i.TenantId == tenantId)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var tenantClientsCount = await _context.Clients
+                    .Where(c => c.TenantId == tenantId)
+                    .AsNoTracking()
+                    .CountAsync();
+
+                var tenantExpenses = await _context.Expenses
+                    .Where(e => e.TenantId == tenantId)
+                    .AsNoTracking()
+                    .ToListAsync();
 
                 // ১. Total Invoices & Active Clients
-                ViewBag.TotalInvoices = allInvoices.Count;
-                ViewBag.ActiveClients = allClients.Count;
+                ViewBag.TotalInvoices = tenantInvoices.Count;
+                ViewBag.ActiveClients = tenantClientsCount;
 
-                // ২. Total Due Calculation
-                ViewBag.TotalDue = allInvoices.Sum(i => i.DueAmount);
+                // ২. Total Due Calculation (বকেয়া পরিমাণ)
+                ViewBag.TotalDue = tenantInvoices.Sum(i => i.TotalAmount - i.PaidAmount);
 
-                // ৩. Monthly Sales & Expenses
-                var currentMonthSales = allInvoices
+                // ৩. Monthly Sales & Expenses (চলতি মাসের হিসাব)
+                var currentMonthSales = tenantInvoices
                     .Where(i => i.IssueDate.Month == now.Month && i.IssueDate.Year == now.Year)
                     .Sum(i => i.TotalAmount);
 
-                var currentMonthExpenses = allExpenses
+                var currentMonthExpenses = tenantExpenses
                     .Where(e => e.ExpenseDate.Month == now.Month && e.ExpenseDate.Year == now.Year)
                     .Sum(e => e.Amount);
 
-                decimal totalSales = currentMonthSales > 0 ? currentMonthSales : allInvoices.Sum(i => i.TotalAmount);
-                ViewBag.MonthlySales = totalSales;
+                ViewBag.MonthlySales = currentMonthSales;
                 ViewBag.MonthlyExpenses = currentMonthExpenses;
 
                 // ৪. Net Profit Calculation
-                ViewBag.NetProfit = totalSales - currentMonthExpenses;
+                ViewBag.NetProfit = currentMonthSales - currentMonthExpenses;
 
-                // ৫. Chart Analytics (গত ৬ মাস: Revenue vs Expense)
+                // ৫. Chart Analytics (গত ৬ মাস: Revenue vs Expense - Fixed Year + Month matching)
                 for (int i = 5; i >= 0; i--)
                 {
                     var targetDate = now.AddMonths(-i);
                     var monthName = targetDate.ToString("MMM");
 
-                    var monthlyRevenue = allInvoices
+                    var monthlyRevenue = tenantInvoices
                         .Where(inv => inv.IssueDate.Month == targetDate.Month && inv.IssueDate.Year == targetDate.Year)
                         .Sum(inv => inv.TotalAmount);
 
-                    var monthlyExpense = allExpenses
+                    var monthlyExpense = tenantExpenses
                         .Where(exp => exp.ExpenseDate.Month == targetDate.Month && exp.ExpenseDate.Year == targetDate.Year)
                         .Sum(exp => exp.Amount);
 
@@ -97,7 +112,7 @@ namespace BillCraft__Multi_Tenant_SaaS_System_.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading dashboard data");
+                _logger.LogError(ex, "Error loading dashboard data for tenant: {TenantId}", tenantId);
 
                 ViewBag.MonthlySales = 0m;
                 ViewBag.MonthlyExpenses = 0m;
