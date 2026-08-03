@@ -9,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+// Services registration
+builder.Services.AddHostedService<InvoiceOverdueCheckerService>();
 
 // 2. Register Tenant Services BEFORE DbContext
 builder.Services.AddScoped<ITenantProvider, TenantProvider>();

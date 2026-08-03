@@ -1,4 +1,5 @@
 ﻿using BillCraft.Web.Models;
+using BillCraft__Multi_Tenant_SaaS_System_.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -29,6 +30,7 @@ namespace BillCraft.Web.Data
         public DbSet<TenantSubscription> TenantSubscriptions { get; set; } = null!;
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<TenantSettings> TenantSettingsSet { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
